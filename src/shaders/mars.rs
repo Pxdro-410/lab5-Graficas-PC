@@ -2,7 +2,6 @@ use crate::color::Color;
 use crate::fragment::Fragment;
 use crate::shaders::Uniforms;
 use crate::noise::*;
-use nalgebra_glm::*;
 
 /// Shader de Marte con 4 capas
 /// 1. Color base rojo oxido
@@ -11,11 +10,8 @@ use nalgebra_glm::*;
 /// 4. Lineas de canones y valles profundos
 pub fn mars_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let pos = fragment.model_pos;
-    let normal = fragment.normal;
     let _t = uniforms.time;
     let intensity = fragment.intensity.clamp(0.18, 1.0);
-
-    let n = vec3(normal.x, normal.y, normal.z).normalize();
 
     // Capa 1: Color base rojo oxido mineral
     let base_color = Color::new(0.75, 0.25, 0.12);
@@ -42,9 +38,10 @@ pub fn mars_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let color_after_terrain = base_color.lerp(&terrain_color, 0.65);
 
     // Capa 3: Casquetes polares blancos
-    // Usar componente Y de la normal para determinar la latitud
-    let latitude = n.y;
-    let abs_lat = latitude.abs();
+    // Usar la coordenada Y del modelo para que los polos giren con el planeta
+    let len = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt().max(0.0001);
+    let ny = pos.y / len;
+    let abs_lat = ny.abs();
 
     // Los casquetes de hielo aparecen cerca de los polos
     let ice_threshold = 0.82;

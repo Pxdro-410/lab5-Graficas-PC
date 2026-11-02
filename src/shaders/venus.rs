@@ -2,7 +2,6 @@ use crate::color::Color;
 use crate::fragment::Fragment;
 use crate::shaders::Uniforms;
 use crate::noise::*;
-use nalgebra_glm::*;
 
 /// Shader de Venus con 3 capas
 /// 1. Color base amarillo ambar palido
@@ -10,7 +9,6 @@ use nalgebra_glm::*;
 /// 3. Gradiente atmosferico entre el ecuador y los polos
 pub fn venus_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let pos = fragment.model_pos;
-    let normal = fragment.normal;
     let t = uniforms.time;
     let intensity = fragment.intensity.clamp(0.18, 1.0); // Ambiente suave para iluminar la silueta completa
 
@@ -64,9 +62,9 @@ pub fn venus_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let color_after_clouds = base_color.lerp(&cloud_color, 0.75);
 
     // Capa 3: Gradiente atmosferico entre ecuador y polos
-    // Usar la componente Y de la normal para determinar la latitud
-    let n = vec3(normal.x, normal.y, normal.z).normalize();
-    let latitude = n.y.abs(); // 0 en el ecuador y 1 en los polos
+    // Usar la coordenada Y del modelo para que el gradiente gire con el planeta
+    let len = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z).sqrt().max(0.0001);
+    let latitude = (pos.y / len).abs();
 
     let equator_tint = Color::new(0.95, 0.65, 0.3);  // Tono mas anaranjado en el ecuador
     let pole_tint = Color::new(0.95, 0.88, 0.55);     // Tono mas amarillo en los polos
